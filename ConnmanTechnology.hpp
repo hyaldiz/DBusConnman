@@ -5,72 +5,74 @@
 #include <QDBusVariant>
 #include <QDBusMessage>
 #include <QDBusInterface>
+#include <QPair>
 #include "ConnmanData.hpp"
 
 class ConnmanTechnology : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(bool powered                 READ powered             WRITE setPowered               NOTIFY poweredChanged)
-    Q_PROPERTY(bool connected               READ connected                                          NOTIFY connectedChanged)
-    Q_PROPERTY(QString name                 READ name                                               NOTIFY nameChanged)
-    Q_PROPERTY(QString type                 READ type                                               CONSTANT)
-    Q_PROPERTY(bool tethering               READ tethering           WRITE setTethering             NOTIFY tetheringChanged)
-    Q_PROPERTY(QString tetheringIdentifier  READ tetheringIdentifier WRITE setTetheringIdentifier   NOTIFY tetheringIdentifierChanged)
-    Q_PROPERTY(QString tetheringPassphrase  READ tetheringPassphrase WRITE setTetheringPassphrase   NOTIFY tetheringPassphraseChanged)
+    Q_PROPERTY(bool powered                 READ powered             WRITE setPowered               NOTIFY  propertyChanged)
+    Q_PROPERTY(bool connected               READ connected                                          NOTIFY  propertyChanged)
+    Q_PROPERTY(QString name                 READ name                                               NOTIFY  propertyChanged)
+    Q_PROPERTY(QString type                 READ type                                               CONSTANT               )
+    Q_PROPERTY(bool tethering               READ tethering           WRITE setTethering             NOTIFY  propertyChanged)
+    Q_PROPERTY(bool scannig READ scanning NOTIFY scannigChanged)
+
 public:
     using ObjectPath_t = QMap<QString,QString>;
 
     ConnmanTechnology(const QString& type,QObject* parent = nullptr);
 
+    void scan();
+
     void setPowered(bool powered);
     void setTethering(bool tethering);
-    void setTetheringIdentifier(const QString& tetheringIdentifier);
-    void setTetheringPassphrase(const QString& tetheringPassphrase);
+    void setScannig(bool scannig);
 
-    bool    powered()const;
-    bool    connected()const;
-    QString name()const;
-    QString type()const;
-    bool    tethering()const;
-    QString tetheringIdentifier()const;
-    QString tetheringPassphrase()const;
+    ConnmanData::ObjectMap_t properties();
+    bool    powered();
+    bool    connected();
+    QString name();
+    QString type();
+    bool    tethering();
+    bool    scanning()const {return _scanning;}
 
     static const char* _technologyTypeWiFi;
     static const char* _technologyEthernet;
     static const char* _technologyTypeBluetooth;
     static const char* _technologyTypep2p;
 
-signals:
-    void propertyChanged(const QString& name,QDBusVariant dbvalue,QDBusMessage message);
+    static const char* _poweredPropertyName;
+    static const char* _connectedPropertyName;
+    static const char* _namePropertyName;
+    static const char* _typePropertyName;
+    static const char* _tetheringPropertyName;
 
-    void poweredChanged();
-    void connectedChanged();
-    void nameChanged();
-    void tetheringChanged();
-    void tetheringIdentifierChanged();
-    void tetheringPassphraseChanged();
+signals:
+    void propertyChanged();
+    void scannigChanged();
+
+private slots:
+    void technologyPropertyChanged(QString name,QDBusVariant dbvalue);
 
 private:
     void checkDBusConnection();
-
-    bool technologies();
-
+    bool technology();
     QDBusMessage::MessageType processReply(const QDBusMessage& reply);
 
-    static void buildObjectPaths();
+    static void buildObjectPathMap();
     static ObjectPath_t _objectPathInfoMap;
 
-    QDBusInterface*     _connmanManager;
-    QList<ConnmanData>  _technologies;
-
+    QDBusInterface* _connmanManager;
+    ConnmanData     _technology;
     bool    _powered;
     bool    _connected;
     QString _name;
     QString _type;
     bool    _tethering;
-    QString _tetheringIdentifier;
-    QString _tetheringPassphrase;
+    quint16 _error;
+    bool    _scanning;
 };
 
 #endif // CONNMANTECHNOLOGY_HPP

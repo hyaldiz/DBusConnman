@@ -15,7 +15,7 @@ public:
     using ObjectMap_t = QMap<QString,QVariant>;
 
     static bool array(QList<ConnmanData> &referanceList, const QDBusMessage &referanceMessage);
-    static bool map(QMap<QString, QVariant> &referanceMap, const QDBusMessage &referanceMessage);
+    static bool map(ObjectMap_t &referanceMap, const QDBusMessage &referanceMessage);
 
     const QDBusObjectPath& objectPath()const {return _objPath;}
     const ObjectMap_t& objectMap()const {return _objMap;}

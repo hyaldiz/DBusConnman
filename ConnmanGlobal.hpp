@@ -1,12 +1,16 @@
 #ifndef CONNMANGLOBAL_HPP
 #define CONNMANGLOBAL_HPP
 
-#define DBUS_PATH "/"
-#define DBUS_CON_SERVICE      "net.connman"
-#define DBUS_CON_MANAGER      "net.connman.Manager"
-#define DBUS_CON_TECHNOLOGY   "net.connman.Technology"
+#define CONNMAN_SERVICE                 "net.connman"
+#define CONNMAN_PATH                    "/net/connman"
+#define CONNMAN_MANAGER_INTERFACE       CONNMAN_SERVICE".Manager"
+#define CONNMAN_MANAGER_PATH            "/"
+#define CONNMAN_SERVICE_INTERFACE       CONNMAN_SERVICE".Service"
+#define CONNMAN_TECHNOLOGY_INTERFACE    CONNMAN_SERVICE".Technology"
 
-namespace Connman {
+#include <QProcess>
+
+struct Connman {
 
     enum {
         ERROR_NO                        = 0x00,
@@ -16,6 +20,19 @@ namespace Connman {
         ERROR_Technologies              = (1 << 3),
         ERROR_Services                  = (1 << 4)
     };
-}
+
+    static float findConnmanVersion()
+    {
+        float version;
+        bool ok = false;
+        QProcess qprocess;
+        qprocess.start("connmand",{"-v"});
+        qprocess.waitForFinished(3000);
+        version = qprocess.readAllStandardOutput().toFloat(&ok);
+        if(!ok)
+            version = -1.0;
+        return version;
+    }
+};
 
 #endif // CONNMANGLOBAL_HPP

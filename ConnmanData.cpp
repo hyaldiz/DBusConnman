@@ -1,5 +1,6 @@
 #include "ConnmanData.hpp"
 #include <QDBusArgument>
+#include <QDebug>
 
 bool ConnmanData::array(QList<ConnmanData> &referanceList, const QDBusMessage &referanceMessage)
 {

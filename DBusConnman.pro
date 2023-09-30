@@ -1,4 +1,4 @@
-QT += core dbus
+QT += core widgets dbus
 
 TEMPLATE = app
 

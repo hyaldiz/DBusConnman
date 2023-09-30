@@ -9,17 +9,30 @@ const char* ConnmanTechnology::_technologyEthernet      = "ethernet";
 const char* ConnmanTechnology::_technologyTypeBluetooth = "bluetooth";
 const char* ConnmanTechnology::_technologyTypep2p       = "p2p";
 
+const char* ConnmanTechnology::_poweredPropertyName             = "Powered";
+const char* ConnmanTechnology::_connectedPropertyName           = "Connected";
+const char* ConnmanTechnology::_namePropertyName                = "Name";
+const char* ConnmanTechnology::_typePropertyName                = "Type";
+const char* ConnmanTechnology::_tetheringPropertyName           = "Tethering";
+
 ConnmanTechnology::ConnmanTechnology(const QString &type, QObject *parent) : QObject(parent)
     ,_connmanManager(nullptr)
     ,_type(type)
+    ,_error(Connman::ERROR_NO)
 {
     if(_objectPathInfoMap.isEmpty())
-        buildObjectPaths();
+        buildObjectPathMap();
 
     checkDBusConnection();
+
+    ConnmanData::ObjectMap_t _properties = properties();
+    _powered = _properties.value(_poweredPropertyName).toBool();
+    _connected = _properties.value(_connectedPropertyName).toBool();
+    _name = _properties.value(_namePropertyName).toString();
+    _tethering = _properties.value(_tetheringPropertyName).toBool();
 }
 
-void ConnmanTechnology::buildObjectPaths()
+void ConnmanTechnology::buildObjectPathMap()
 {
     _objectPathInfoMap[ConnmanTechnology::_technologyTypeWiFi]      = "/net/connman/technology/wifi";
     _objectPathInfoMap[ConnmanTechnology::_technologyEthernet]      = "/net/connman/technology/ethernet";
@@ -29,32 +42,48 @@ void ConnmanTechnology::buildObjectPaths()
 
 void ConnmanTechnology::checkDBusConnection()
 {
-    quint16 geciciError = 0;
     if(!QDBusConnection::systemBus().isConnected())
-        geciciError = Connman::ERROR_NO_DBUS;
+        _error = Connman::ERROR_NO_DBUS;
     else {
-        _connmanManager = new QDBusInterface(DBUS_CON_SERVICE,DBUS_PATH,DBUS_CON_MANAGER,QDBusConnection::systemBus(),this);
+        _connmanManager = new QDBusInterface(CONNMAN_SERVICE,CONNMAN_MANAGER_PATH,CONNMAN_MANAGER_INTERFACE,QDBusConnection::systemBus(),this);
         if(!_connmanManager->isValid())
-            geciciError = Connman::ERROR_Invalid_Connman_Interface;
+            _error = Connman::ERROR_Invalid_Connman_Interface;
         else {
-            geciciError &= ~(Connman::ERROR_PROPERTIES);
-            geciciError &= ~(Connman::ERROR_Technologies);
-            geciciError &= ~(Connman::ERROR_Services);
+            _error &= ~(Connman::ERROR_PROPERTIES);
+            _error &= ~(Connman::ERROR_Technologies);
+            _error &= ~(Connman::ERROR_Services);
 
-            if(!technologies())
-                geciciError = Connman::ERROR_Technologies;
+            if(!technology())
+                _error = Connman::ERROR_Technologies;
             else {
-                //WAIT FOR DONE!
+                QDBusConnection::systemBus().connect
+                    (
+                        CONNMAN_SERVICE,
+                        _technology.objectPath().path(),
+                        CONNMAN_TECHNOLOGY_INTERFACE,
+                        "PropertyChanged",
+                        this,
+                        SLOT(technologyPropertyChanged(QString,QDBusVariant))
+                    );
             }
         }
     }
 }
 
-bool ConnmanTechnology::technologies()
+bool ConnmanTechnology::technology()
 {
+    QList<ConnmanData> technologies;
     QDBusMessage reply = _connmanManager->call("GetTechnologies");
     processReply(reply);
-    return ConnmanData::array(_technologies,reply);
+    ConnmanData::array(technologies,reply);
+
+    for (const auto& connmanData : technologies) {
+        if(connmanData.objectMap().value("Type").toString() == _type) {
+            _technology = connmanData;
+            return true;
+        }
+    }
+    return false;
 }
 
 QDBusMessage::MessageType ConnmanTechnology::processReply(const QDBusMessage& reply)
@@ -64,61 +93,76 @@ QDBusMessage::MessageType ConnmanTechnology::processReply(const QDBusMessage& re
     return reply.type();
 }
 
+void ConnmanTechnology::scan()
+{
+    QDBusInterface* techInterface =
+        new QDBusInterface(CONNMAN_SERVICE,_objectPathInfoMap[_type],CONNMAN_TECHNOLOGY_INTERFACE,QDBusConnection::systemBus(),this);
+    processReply(techInterface->call("Scan"));
+    setScannig(true);
+    techInterface->deleteLater();
+}
+
 void ConnmanTechnology::setPowered(bool powered)
 {
     QDBusInterface* techInterface =
-        new QDBusInterface(DBUS_CON_SERVICE,_objectPathInfoMap[_type],DBUS_CON_TECHNOLOGY,QDBusConnection::systemBus(),this);
-
-    processReply(techInterface->call(QDBus::NoBlock,"SetProperty","Powered",QVariant::fromValue(QDBusVariant(powered))));
+        new QDBusInterface(CONNMAN_SERVICE,_objectPathInfoMap[_type],CONNMAN_TECHNOLOGY_INTERFACE,QDBusConnection::systemBus(),this);
+    processReply(techInterface->call(QDBus::BlockWithGui,"SetProperty",_poweredPropertyName,QVariant::fromValue(QDBusVariant(powered))));
     techInterface->deleteLater();
 }
 
 void ConnmanTechnology::setTethering(bool tethering)
 {
-
+    QDBusInterface* techInterface =
+        new QDBusInterface(CONNMAN_SERVICE,_objectPathInfoMap[_type],CONNMAN_TECHNOLOGY_INTERFACE,QDBusConnection::systemBus(),this);
+    processReply(techInterface->call(QDBus::BlockWithGui,"SetProperty",_tetheringPropertyName,QVariant::fromValue(QDBusVariant(tethering))));
+    techInterface->deleteLater();
 }
 
-void ConnmanTechnology::setTetheringIdentifier(const QString &tetheringIdentifier)
+void ConnmanTechnology::setScannig(bool scannig)
 {
-
+    if(scannig != _scanning) {
+        _scanning = scannig;
+        emit scannigChanged();
+    }
 }
 
-void ConnmanTechnology::setTetheringPassphrase(const QString &tetheringPassphrase)
+ConnmanData::ObjectMap_t ConnmanTechnology::properties()
 {
-
+    ConnmanData::ObjectMap_t properties;
+    QDBusInterface* techInterface =
+        new QDBusInterface(CONNMAN_SERVICE,_objectPathInfoMap[_type],CONNMAN_TECHNOLOGY_INTERFACE,QDBusConnection::systemBus(),this);
+    QDBusMessage reply = techInterface->call(QDBus::BlockWithGui,"GetProperties");
+    processReply(reply);
+    ConnmanData::map(properties,reply);
+    return properties;
 }
 
-bool ConnmanTechnology::powered() const
+bool ConnmanTechnology::powered()
 {
-
+    return properties().value(_poweredPropertyName).toBool();
 }
 
-bool ConnmanTechnology::connected() const
+bool ConnmanTechnology::connected()
 {
-
+    return properties().value(_connectedPropertyName).toBool();
 }
 
-QString ConnmanTechnology::name() const
+QString ConnmanTechnology::name()
 {
-
+    return properties().value(_namePropertyName).toString();
 }
 
-QString ConnmanTechnology::type() const
+QString ConnmanTechnology::type()
 {
     return _type;
 }
 
-bool ConnmanTechnology::tethering() const
+bool ConnmanTechnology::tethering()
 {
-
+    return properties().value(_tetheringPropertyName).toBool();
 }
 
-QString ConnmanTechnology::tetheringIdentifier() const
+void ConnmanTechnology::technologyPropertyChanged(QString name, QDBusVariant dbvalue)
 {
-
-}
-
-QString ConnmanTechnology::tetheringPassphrase() const
-{
-
+    emit propertyChanged();
 }
