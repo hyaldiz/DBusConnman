@@ -1,7 +1,13 @@
+QT += core dbus
+
 TEMPLATE = app
+
 CONFIG += console c++17
-CONFIG -= app_bundle
-CONFIG -= qt
 
 SOURCES += \
+        ConnmanTechnology.cpp \
         main.cpp
+
+HEADERS += \
+    ConnmanGlobal.hpp \
+    ConnmanTechnology.hpp
