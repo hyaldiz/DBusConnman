@@ -5,6 +5,7 @@
 #include <QDBusVariant>
 #include <QDBusMessage>
 #include <QDBusInterface>
+#include "ConnmanData.hpp"
 
 class ConnmanTechnology : public QObject
 {
@@ -27,11 +28,11 @@ public:
     void setTetheringIdentifier(const QString& tetheringIdentifier);
     void setTetheringPassphrase(const QString& tetheringPassphrase);
 
-    bool powered()const;
-    bool connected()const;
+    bool    powered()const;
+    bool    connected()const;
     QString name()const;
     QString type()const;
-    bool tethering()const;
+    bool    tethering()const;
     QString tetheringIdentifier()const;
     QString tetheringPassphrase()const;
 
@@ -52,21 +53,24 @@ signals:
 
 private:
     void checkDBusConnection();
-    bool technologyExist();
+
+    bool technologies();
+
     QDBusMessage::MessageType processReply(const QDBusMessage& reply);
 
     static void buildObjectPaths();
     static ObjectPath_t _objectPathInfoMap;
 
-    QDBusInterface* _connmanManager;
-    bool _powered;
-    bool _connected;
+    QDBusInterface*     _connmanManager;
+    QList<ConnmanData>  _technologies;
+
+    bool    _powered;
+    bool    _connected;
     QString _name;
     QString _type;
-    bool _tethering;
+    bool    _tethering;
     QString _tetheringIdentifier;
     QString _tetheringPassphrase;
-
 };
 
 #endif // CONNMANTECHNOLOGY_HPP

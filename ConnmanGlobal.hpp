@@ -6,13 +6,6 @@
 #define DBUS_CON_MANAGER      "net.connman.Manager"
 #define DBUS_CON_TECHNOLOGY   "net.connman.Technology"
 
-#include <QObject>
-
-struct arrayElement {
-    Q_GADGET
-
-};
-
 namespace Connman {
 
     enum {

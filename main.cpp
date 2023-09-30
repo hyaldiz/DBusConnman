@@ -8,8 +8,6 @@ int main()
 
     ConnmanTechnology tech(ConnmanTechnology::_technologyTypeBluetooth);
 
-    tech.setPowered(false);
-
     while(1);
 
     return 0;
