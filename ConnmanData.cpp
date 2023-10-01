@@ -1,6 +1,5 @@
 #include "ConnmanData.hpp"
 #include <QDBusArgument>
-#include <QDebug>
 
 bool ConnmanData::array(QList<ConnmanData> &referanceList, const QDBusMessage &referanceMessage)
 {
@@ -55,4 +54,20 @@ bool ConnmanData::map(ObjectMap_t &referanceMap, const QDBusMessage &referanceMe
 
     qdbusArgument.endMap();
     return true;
+}
+
+void ConnmanData::setObjectPath(QDBusObjectPath objectPath)
+{
+    if(objectPath != _objPath) {
+        _objPath = objectPath;
+        //emit contentDataChanged();
+    }
+}
+
+void ConnmanData::setObjectMap(ObjectMap_t objectMap)
+{
+    if(objectMap != _objMap) {
+        _objMap = objectMap;
+        //emit contentDataChanged();
+    }
 }

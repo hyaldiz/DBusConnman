@@ -6,10 +6,10 @@ CONFIG += console c++17
 
 SOURCES += \
         ConnmanData.cpp \
-        ConnmanTechnology.cpp \
+        ConnmanManager.cpp \
         main.cpp
 
 HEADERS += \
     ConnmanData.hpp \
     ConnmanGlobal.hpp \
-    ConnmanTechnology.hpp
+    ConnmanManager.hpp

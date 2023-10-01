@@ -1,3 +1,10 @@
+/*
+    Owner: Huseyin YALDIZ
+    Contact: contact@huseyinyaldiz.com
+    Description: Writed for KOLARC welding machines control the WiFi interface
+    License: Copyright (C) 2023 KOLARC All rights reserved.
+    Organization Domain: www.kolarc.net
+*/
 #ifndef CONNMANGLOBAL_HPP
 #define CONNMANGLOBAL_HPP
 

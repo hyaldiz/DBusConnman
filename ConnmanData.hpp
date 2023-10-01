@@ -8,8 +8,8 @@
 struct ConnmanData {
     Q_GADGET
 
-    Q_PROPERTY(QDBusObjectPath          objPath MEMBER _objPath CONSTANT)
-    Q_PROPERTY(QMap<QString,QVariant>   objMap  MEMBER _objMap  CONSTANT)
+    Q_PROPERTY(QDBusObjectPath objPath MEMBER _objPath CONSTANT)
+    Q_PROPERTY(QMap<QString,QVariant> objMap MEMBER _objMap CONSTANT)
 
 public:
     using ObjectMap_t = QMap<QString,QVariant>;
@@ -17,8 +17,11 @@ public:
     static bool array(QList<ConnmanData> &referanceList, const QDBusMessage &referanceMessage);
     static bool map(ObjectMap_t &referanceMap, const QDBusMessage &referanceMessage);
 
-    const QDBusObjectPath& objectPath()const {return _objPath;}
-    const ObjectMap_t& objectMap()const {return _objMap;}
+    void setObjectPath(QDBusObjectPath objectPath);
+    void setObjectMap(ObjectMap_t objectMap);
+
+    QDBusObjectPath& objectPath() {return _objPath;}
+    ObjectMap_t& objectMap() {return _objMap;}
 
 private:
     QDBusObjectPath _objPath;
