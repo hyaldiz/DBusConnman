@@ -58,7 +58,7 @@ signals:
 
 private slots:
     void technologyPropertyChanged(QString name,QDBusVariant dbvalue);
-    void servicePropertyChanged(QString name,QDBusVariant dbvalue,QDBusMessage);
+    void servicePropertyChanged(QString property,QDBusVariant dbvalue,QDBusMessage);
     void managerPropertyChanged(QString name,QDBusVariant dbvalue) {};
     void servicesChanged(QList<QVariant>,QList<QDBusObjectPath>,QDBusMessage);
     void peersChanged(QList<QVariant>,QList<QDBusObjectPath>) {};

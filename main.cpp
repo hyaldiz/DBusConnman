@@ -23,7 +23,11 @@ int main(int argc, char* argv[])
     {
         tech.scan();
     });
+
+
     tmr->start();
+
+
 
 
     a.exec();

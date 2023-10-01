@@ -206,9 +206,24 @@ void ConnmanManager::technologyPropertyChanged(QString property, QDBusVariant db
     emit propertyChanged();
 }
 
-void ConnmanManager::servicePropertyChanged(QString name, QDBusVariant dbvalue,QDBusMessage message)
+void ConnmanManager::servicePropertyChanged(QString property, QDBusVariant dbvalue,QDBusMessage message)
 {
+    QString serviceState = "";
 
+    for(int i=0; i < _services.size(); i++) {
+        if(message.path() == _services[i].objectPath().path()) {
+
+            ConnmanData::ObjectMap_t objMap(_services[i].objectMap());
+            objMap.remove(property);
+            objMap.insert(property,objMap);
+            _services[i].setObjectMap(objMap);
+            serviceState = objMap.value("State").toString();
+        }
+    }
+
+    if(property == "Error" && serviceState == "failure") {
+        //QWCApplication ile sinyal yolla
+    }
 }
 
 void ConnmanManager::servicesChanged(QList<QVariant> managedPskList, QList<QDBusObjectPath> removedList,QDBusMessage message)
